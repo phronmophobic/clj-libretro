@@ -1,0 +1,7 @@
+(ns com.phronemophobic.clj-libretro-test
+  (:require [clojure.test :refer :all]
+            [com.phronemophobic.clj-libretro :refer :all]))
+
+(deftest a-test
+  (testing "FIXME, I fail."
+    (is (= 0 1))))
