@@ -1,19 +1,26 @@
 {:paths ["src" "resources"]
- :deps {org.clojure/clojure {:mvn/version "1.10.3"}}
+ :deps {org.clojure/clojure {:mvn/version "1.11.1"}
+        io.github.phronmophobic/clong {;;:git/tag "v0.9.3",
+                                       :git/sha "a27a6ce5f086d0644d2054e59649d722fcb73603"
+                                       ;;:local/root "../clong"
+                                       }
+        com.phronemophobic/membrane {:mvn/version "0.13.0-beta"
+                                     ;; :local/root "../membrane2"
+                                     }
+        com.phronemophobic.membrane/skialib-macosx-aarch64 {:mvn/version "0.13-beta"
+                                                            ;; :local/root "/Users/adrian/workspace/membrane2/csource/macos-aarch64"
+                                                            }
+        }
  :aliases
- {:test {:extra-paths ["test"]
-         :extra-deps {org.clojure/test.check {:mvn/version "1.1.0"}}}
-  :runner
-  {:extra-deps {io.github.cognitect-labs/test-runner
-                {:git/url "https://github.com/cognitect-labs/test-runner"
-                 :sha "2d69f33d7980c3353b246c28f72ffeafbd9f2fab"}}
-   :exec-fn cognitect.test-runner.api/test}
-  :jar {:replace-deps {com.github.seancorfield/depstar {:mvn/version "2.0.216"}}
-        :exec-fn hf.depstar/jar
-        :exec-args {:jar "clj-libretro.jar" :sync-pom true}}
-  :install {:replace-deps {slipset/deps-deploy {:mvn/version "0.1.5"}}
-            :exec-fn deps-deploy.deps-deploy/deploy
-            :exec-args {:installer :local :artifact "clj-libretro.jar"}}
-  :deploy {:replace-deps {slipset/deps-deploy {:mvn/version "0.1.5"}}
-           :exec-fn deps-deploy.deps-deploy/deploy
-           :exec-args {:installer :remote :artifact "clj-libretro.jar"}}}}
+ {
+  :project
+  {
+   ;; snes
+   ;; :jvm-opts ["-Djna.library.path=../llvm-project/build/out/lib:/opt/local/lib:/Users/adrian/workspace/libretro-super/libretro-snes9x/libretro"
+   ;;            "-Djava.library.path=../llvm-project/build/out/lib:/opt/local/lib:/Users/adrian/workspace/libretro-super/libretro-snes9x/libretro"]
+
+   ;; nes
+   :jvm-opts ["-Djna.library.path=../llvm-project/build/out/lib:/opt/local/lib:/Users/adrian/workspace/libretro-super/libretro-fceumm"
+              "-Djava.library.path=../llvm-project/build/out/lib:/opt/local/lib:/Users/adrian/workspace/libretro-super/libretro-fceumm"]
+
+   }}}
