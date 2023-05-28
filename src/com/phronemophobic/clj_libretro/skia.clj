@@ -407,13 +407,12 @@
                    :geometry
                    :base-height
                    (* 3))
-        window-thread (doto (Thread.
-                             (fn []
-                               (skia/run-sync #(main-view video-pixmap* controls*)
-                                              {:window-start-width wwidth
-                                               :window-start-height wheight})
-                               (reset! running? false)))
-                        .start)]
+        winfo (skia/run #(main-view video-pixmap* controls*)
+                {:window-start-width wwidth
+                 :window-start-height wheight
+                 :handlers {:window-close
+                            (fn [window window-handle]
+                              (reset! running? false))}})]
     (loop []
       (when @running?
         (let [start (System/nanoTime)]
