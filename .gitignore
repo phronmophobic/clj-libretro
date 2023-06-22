@@ -13,3 +13,10 @@
 /.socket-repl-port
 .hgignore
 .hg/
+*.smc
+*.sfc
+*.nes
+*.save
+hs_err*
+*.mp4
+saves/
