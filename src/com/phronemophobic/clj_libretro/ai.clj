@@ -446,7 +446,7 @@
 
   (skia/run
     (component/make-app #'image-viewer
-                        {:imgs (path->imgs results)
+                        {:imgs frames
                          :n 0}))
   
 
