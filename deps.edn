@@ -10,17 +10,22 @@
         com.phronemophobic.membrane/skialib-macosx-aarch64 {:mvn/version "0.13-beta"
                                                             ;; :local/root "/Users/adrian/workspace/membrane2/csource/macos-aarch64"
                                                             }
+
+        org.clojure/math.combinatorics {:mvn/version "0.2.0"}
+
         }
  :aliases
  {
   :project
   {
+   :extra-deps {com.phronemophobic/clj-media {:local/root "../clj-media"}}
    ;; snes
    ;; :jvm-opts ["-Djna.library.path=../llvm-project/build/out/lib:/opt/local/lib:/Users/adrian/workspace/libretro-super/libretro-snes9x/libretro"
    ;;            "-Djava.library.path=../llvm-project/build/out/lib:/opt/local/lib:/Users/adrian/workspace/libretro-super/libretro-snes9x/libretro"]
 
    ;; nes
    :jvm-opts ["-Djna.library.path=../llvm-project/build/out/lib:/opt/local/lib:/Users/adrian/workspace/libretro-super/libretro-fceumm"
-              "-Djava.library.path=../llvm-project/build/out/lib:/opt/local/lib:/Users/adrian/workspace/libretro-super/libretro-fceumm"]
+              "-Djava.library.path=../llvm-project/build/out/lib:/opt/local/lib:/Users/adrian/workspace/libretro-super/libretro-fceumm"
+              "-Xmx20g"]
 
    }}}
