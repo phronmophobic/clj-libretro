@@ -367,7 +367,8 @@
                    (* 3))
         winfo (run-with-close-handler
                #(main-view video-pixmap* controls*)
-               {:window-start-width wwidth
+               {:window-title "clj-libretro"
+                :window-start-width wwidth
                 :window-start-height wheight}
                (fn []
                  (reset! running? false)))
