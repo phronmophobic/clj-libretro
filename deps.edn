@@ -23,10 +23,15 @@
  {
   :project
   {
+   ;; for ffmpeg
+   :jvm-opts ["-Djava.library.path=/opt/local/lib"
+              ;;"-Djna.library.path=../llvm-project/build/out/lib:/opt/local/lib"
+              ]
+
    :extra-deps {com.phronemophobic/clj-media {:local/root "../clj-media"}
                 com.phronemophobic.membrane/skialib-macosx-aarch64 {:mvn/version "0.13-beta"
-                                                            ;; :local/root "/Users/adrian/workspace/membrane2/csource/macos-aarch64"
-                                                            }}
+                                                                    ;; :local/root "/Users/adrian/workspace/membrane2/csource/macos-aarch64"
+                                                                    }}
 
 
    }}}
