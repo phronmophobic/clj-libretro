@@ -10,6 +10,7 @@
         com.phronemophobic.membrane/skialib-macosx-aarch64 {:mvn/version "0.13-beta"
                                                             ;; :local/root "/Users/adrian/workspace/membrane2/csource/macos-aarch64"
                                                             }
+        com.phronemophobic.cljonda/libretro_fceumm-linux-x86-64 {:mvn/version "f068818c4d68620c31eca0c02a5891ee3096b645"}
 
         org.clojure/math.combinatorics {:mvn/version "0.2.0"}
 

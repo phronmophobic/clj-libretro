@@ -1,5 +1,6 @@
 (ns com.phronemophobic.clj-libretro.ai
-  (:require [membrane.skia :as skia]
+  (:require
+   [membrane.java2d :as backend]
             [membrane.ui :as ui]
             [clojure.java.io :as io]
             [membrane.component :as component
@@ -8,7 +9,8 @@
             [clojure.math.combinatorics :as combo]
             [com.phronemophobic.clj-libretro.constants :as c]
             [com.phronemophobic.clj-libretro.raw :as retro]
-            [com.phronemophobic.clj-libretro.skia :as skia-ui]
+            ;; [com.phronemophobic.clj-libretro.skia :as skia-ui]
+            [com.phronemophobic.clj-libretro.java2d :as retro-ui]
             [clojure.data.priority-map :refer [priority-map]])
   (:import com.sun.jna.Memory
            com.sun.jna.ptr.ByteByReference
@@ -110,7 +112,7 @@
   [state]
   (retro/retro_unserialize state (alength state)))
 
-(def ^:private render-frame @#'skia-ui/render-frame)
+(def ^:private render-frame @#'retro-ui/render-frame)
 
 (defn ^:private screenshot
   "Run the current game state one frame with no inputs and return a membrane view of the screen."
@@ -122,7 +124,8 @@
       @pm)))
 
 
-(def ^:private repaint! @#'skia/glfw-post-empty-event)
+(def ^:private repaint!(fn [])
+  )
 
 (def ^:private stats
   "Store stats to show current state of search."
@@ -249,7 +252,7 @@
   [:RETRO_DEVICE_ID_JOYPAD_A
    :RETRO_DEVICE_ID_JOYPAD_B
    ;; :RETRO_DEVICE_ID_JOYPAD_SELECT
-   ;; :RETRO_DEVICE_ID_JOYPAD_START
+   :RETRO_DEVICE_ID_JOYPAD_START
    ])
 (def directions
   [;;:RETRO_DEVICE_ID_JOYPAD_UP
@@ -384,7 +387,7 @@
 
   (do
     (init! "Super Mario Bros. (World).nes")
-    (skia/run
+    #_(skia/run
       (fn []
         (let [stat @stats]
           (ui/vertical-layout
@@ -393,7 +396,7 @@
       {:window-start-width 500
        :window-start-height 300})
 
-    (load-save "ui.save")
+    ;; (load-save "ui.save")
     (swap! state-cache assoc [] (get-state))
 
     (def results
@@ -497,3 +500,22 @@
 
   ,)
 
+(comment
+
+  (init! "Super Mario Bros. (World).nes")
+(swap! state-cache assoc [] (get-state))
+  (def results (reduce
+    (fn [inputs controls]
+      (next-state inputs 
+                  controls
+                  120))
+    []
+    [#{}
+     #{:RETRO_DEVICE_ID_JOYPAD_START}
+
+     #{:RETRO_DEVICE_ID_JOYPAD_RIGHT}
+
+     ]))
+
+  (backend/save-image "ss.png" (screenshot))
+)

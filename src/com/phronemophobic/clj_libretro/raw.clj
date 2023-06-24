@@ -42,7 +42,7 @@
                 rdr (java.io.PushbackReader. rdr)]
       (edn/read rdr)))
 
-(def lib (com.sun.jna.NativeLibrary/getInstance "retro"))
+(def lib (com.sun.jna.NativeLibrary/getInstance "retro_fceumm"))
 
 ;; (def struct-prefix (gen/ns-struct-prefix *ns*))
 ;; (gen/def-enums (:enums api))
