@@ -1,5 +1,5 @@
 (ns com.phronemophobic.clj-libretro.ai
-  (:require [membrane.skia :as skia]
+  (:require [membrane.skia :as backend]
             [membrane.ui :as ui]
             [clojure.java.io :as io]
             [membrane.component :as component
@@ -8,8 +8,7 @@
             [clojure.math.combinatorics :as combo]
             [com.phronemophobic.clj-libretro.constants :as c]
             [com.phronemophobic.clj-libretro.api :as retro]
-            [com.phronemophobic.clj-libretro.nes :as nes]
-            [com.phronemophobic.clj-libretro.skia :as skia-ui]
+            [com.phronemophobic.clj-libretro.skia :as retro-ui]
             [clojure.data.priority-map :refer [priority-map]])
   (:import com.sun.jna.Memory
            com.sun.jna.ptr.ByteByReference
@@ -17,7 +16,7 @@
 
 (retro/import-structs!)
 
-(def iretro nes/iretro)
+(def iretro (retro/load-core "fceumm"))
 ;; helpers
 
 (defn ^:private byte-format [b]
@@ -112,7 +111,7 @@
   [state]
   (retro/retro_unserialize iretro state (alength state)))
 
-(def ^:private render-frame @#'skia-ui/render-frame)
+(def ^:private render-frame @#'retro-ui/render-frame)
 
 (defn ^:private screenshot
   "Run the current game state one frame with no inputs and return a membrane view of the screen."
@@ -124,7 +123,7 @@
       @pm)))
 
 
-(def ^:private repaint! @#'skia/glfw-post-empty-event)
+(def ^:private repaint! (fn []))
 
 (def ^:private stats
   "Store stats to show current state of search."
@@ -379,34 +378,39 @@
 (defn ^:private deinit! []
   (retro/retro_deinit iretro))
 
-(comment
+(defn run-solver []
+  (init! "Super Mario Bros. (World).nes")
+  (def winfo (backend/run
+               (fn []
+                 (let [stat @stats]
+                   (ui/vertical-layout
+                    (ui/label (pr-str (dissoc stat :ss)))
+                    (get-in stat [:ss (get stat :ssn)]))))
+               {:window-start-width 500
+                :window-start-height 300}))
+  (alter-var-root #'repaint! (constantly (::backend/repaint winfo)))
 
-  ;; need to initialize glfw before running solver.
-  (skia/run nil)
-
-  (do
-    (init! "Super Mario Bros. (World).nes")
-    (skia/run
-      (fn []
-        (let [stat @stats]
-          (ui/vertical-layout
-           (ui/label (pr-str (dissoc stat :ss)))
-           (get-in stat [:ss (get stat :ssn)]))))
-      {:window-start-width 500
-       :window-start-height 300})
-
-    (load-save "ui.save")
-    (swap! state-cache assoc [] (get-state))
-
+  (swap! state-cache assoc [] (get-state))
+  (let [initial-state
+        ;; get passed start screen
+        (reduce
+         (fn [inputs [controls num-frames]]
+           (next-state inputs controls num-frames))
+         []
+         [[#{} 60]
+          [#{:RETRO_DEVICE_ID_JOYPAD_START} 3]
+          [#{} 180]])]
+    
     (def results
-      (solve []
+      (solve initial-state
              dist
              successors
-             done?)))
+             done?))))
+
+(comment
+  (run-solver)
+  
   ,)
-
-
-
 
 (defui image-viewer [{:keys [imgs n]}]
   (let [n (or n 0)
@@ -446,13 +450,13 @@
 
 (comment
 
-  (skia/run
+  (backend/run
     (component/make-app #'image-viewer
                         {:imgs frames
                          :n 0}))
   
 
-  (skia/run
+  (backend/run
     (component/make-app #'results-viewer
                         {:results results
                          :n 0}))
