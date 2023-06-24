@@ -7,9 +7,6 @@
         com.phronemophobic/membrane {:mvn/version "0.13.0-beta"
                                      ;; :local/root "../membrane2"
                                      }
-        com.phronemophobic.membrane/skialib-macosx-aarch64 {:mvn/version "0.13-beta"
-                                                            ;; :local/root "/Users/adrian/workspace/membrane2/csource/macos-aarch64"
-                                                            }
 
         org.clojure/math.combinatorics {:mvn/version "0.2.0"}
 
@@ -26,7 +23,10 @@
  {
   :project
   {
-   :extra-deps {com.phronemophobic/clj-media {:local/root "../clj-media"}}
+   :extra-deps {com.phronemophobic/clj-media {:local/root "../clj-media"}
+                com.phronemophobic.membrane/skialib-macosx-aarch64 {:mvn/version "0.13-beta"
+                                                            ;; :local/root "/Users/adrian/workspace/membrane2/csource/macos-aarch64"
+                                                            }}
 
 
    }}}
