@@ -57,22 +57,22 @@
 
 (defn -main [game-path]
   (let [iretro (if (str/ends-with? game-path ".nes")
-                 @(requiring-resolve 'com.phronemophobic.clj-libretro.nes/iretro)
-                 @(requiring-resolve 'com.phronemophobic.clj-libretro.snes/iretro))]
+                 (@(requiring-resolve 'com.phronemophobic.clj-libretro.api/load-core) "fceumm")
+                 (@(requiring-resolve 'com.phronemophobic.clj-libretro.api/load-core) "snes9x"))]
     (play-game iretro game-path)
     (System/exit 0)))
 
 (comment
   (play-game
-   @(requiring-resolve 'com.phronemophobic.clj-libretro.nes/iretro)
+   (com.phronemophobic.clj-libretro.api/load-core "fceumm")
    "Super Mario Bros. 2.nes")
 
   (play-game
-   @(requiring-resolve 'com.phronemophobic.clj-libretro.nes/iretro)
+   (com.phronemophobic.clj-libretro.api/load-core "fceumm")
    "testroms/tsone/neskit/2048.nes")
 
   (play-game
-   @(requiring-resolve 'com.phronemophobic.clj-libretro.snes/iretro)
+   (com.phronemophobic.clj-libretro.api/load-core "snes9x")
    "Super Mario World.smc")
   ,)
 
