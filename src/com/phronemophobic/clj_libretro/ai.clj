@@ -7,7 +7,8 @@
             [membrane.basic-components :as basic ]
             [clojure.math.combinatorics :as combo]
             [com.phronemophobic.clj-libretro.constants :as c]
-            [com.phronemophobic.clj-libretro.raw :as retro]
+            [com.phronemophobic.clj-libretro.api :as retro]
+            [com.phronemophobic.clj-libretro.nes :as nes]
             [com.phronemophobic.clj-libretro.skia :as skia-ui]
             [clojure.data.priority-map :refer [priority-map]])
   (:import com.sun.jna.Memory
@@ -16,6 +17,7 @@
 
 (retro/import-structs!)
 
+(def iretro nes/iretro)
 ;; helpers
 
 (defn ^:private byte-format [b]
@@ -47,14 +49,14 @@
     (with-open [is (io/input-stream fname)]
       (io/copy is baos))
     (let [buf (.toByteArray baos)]
-      (retro/retro_unserialize buf (alength buf)))))
+      (retro/retro_unserialize iretro buf (alength buf)))))
 
 (defn ^:private save-game
   "Serialize the current global game state to the file path `fname`."
   [fname]
-  (let [size (retro/retro_serialize_size)
+  (let [size (retro/retro_serialize_size iretro)
         mem (Memory. size)]
-    (retro/retro_serialize mem size)
+    (retro/retro_serialize iretro mem size)
     (let [buf (byte-array size)]
       (.read mem 0 buf 0 size)
       (with-open [os (io/output-stream fname)]
@@ -96,9 +98,9 @@
 (defn ^:private get-state
   "Return a byte array containing the serialized state of the current global game state."
   []
-  (let [size (retro/retro_serialize_size)
+  (let [size (retro/retro_serialize_size iretro)
         mem (Memory. size)]
-    (retro/retro_serialize mem size)
+    (retro/retro_serialize iretro mem size)
     (let [buf (byte-array size)]
       (.read mem 0 buf 0 size)
       buf)))
@@ -108,7 +110,7 @@
 
   `state` should be a byte array containing the serialized game state."
   [state]
-  (retro/retro_unserialize state (alength state)))
+  (retro/retro_unserialize iretro state (alength state)))
 
 (def ^:private render-frame @#'skia-ui/render-frame)
 
@@ -118,7 +120,7 @@
   (let [pm (volatile! nil)]
     (with-redefs [video-refresh-callback (fn [data width height pitch]
                                            (vreset! pm (render-frame nil data width height pitch)))]
-      (retro/retro_run)
+      (retro/retro_run iretro)
       @pm)))
 
 
@@ -159,7 +161,7 @@
                                                                      (render-frame pm data width height pitch)))))))
                                          (repaint!))]
     (dotimes [i num-frames]
-     (retro/retro_run)))
+     (retro/retro_run iretro)))
   (let [new-state (get-state)
         new-inputs (conj inputs
                          {:controls controls
@@ -175,7 +177,7 @@
 
   Note: this is different than the game state."
   []
-  (let [mem (retro/retro_get_memory_data RETRO_MEMORY_SYSTEM_RAM)
+  (let [mem (retro/retro_get_memory_data iretro RETRO_MEMORY_SYSTEM_RAM)
         buf (byte-array ram-size)]
     (.read mem 0 buf 0 ram-size)
     buf))
@@ -211,8 +213,8 @@
   "Checks the current RAM and estimates the current distance from the goal."
   [inputs]
   (let [save-state (get @state-cache inputs)]
-    (retro/retro_unserialize save-state (alength save-state)))
-  (let [mem (retro/retro_get_memory_data RETRO_MEMORY_SYSTEM_RAM)
+    (retro/retro_unserialize iretro save-state (alength save-state)))
+  (let [mem (retro/retro_get_memory_data iretro RETRO_MEMORY_SYSTEM_RAM)
         screen-tile (.getByte mem 0x006D)
         xpos (.getByte mem 0x0086)
         subpixel (.getByte mem 0x0400)
@@ -360,22 +362,22 @@
 
 
 (defn ^:private init! [game-path]
-  (retro/retro_set_environment #'set-environment)
-  (retro/retro_init)
+  (retro/retro_set_environment iretro #'set-environment)
+  (retro/retro_init iretro)
 
 
-  (retro/retro_set_video_refresh #'video-refresh-callback)
-  (retro/retro_set_audio_sample #'audio-sample)
+  (retro/retro_set_video_refresh iretro #'video-refresh-callback)
+  (retro/retro_set_audio_sample iretro #'audio-sample)
 
 
-  (retro/retro_set_input_poll #'input-poll)
-  (retro/retro_set_input_state #'input-state-callback)
-  (retro/retro_set_audio_sample_batch #'audio-sample-batch-callback)
+  (retro/retro_set_input_poll iretro #'input-poll)
+  (retro/retro_set_input_state iretro #'input-state-callback)
+  (retro/retro_set_audio_sample_batch iretro #'audio-sample-batch-callback)
 
-  (retro/retro_load_game (game-info game-path)))
+  (retro/retro_load_game iretro (game-info game-path)))
 
 (defn ^:private deinit! []
-  (retro/retro_deinit))
+  (retro/retro_deinit iretro))
 
 (comment
 
@@ -479,7 +481,7 @@
                                       video-refresh-callback (fn [data width height pitch]
                                                                (vswap! frames conj (render-frame nil data width height pitch)))]
                           (dotimes [i num-frames]
-                            (retro/retro_run)))
+                            (retro/retro_run iretro)))
                         @frames)))
 
             
