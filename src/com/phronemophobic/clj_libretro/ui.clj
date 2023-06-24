@@ -3,7 +3,7 @@
             [clojure.string :as str]
             clojure.math
             [com.phronemophobic.clj-libretro.constants :as c]
-            [com.phronemophobic.clj-libretro.raw :as retro]
+            [com.phronemophobic.clj-libretro.api :as retro]
             [membrane.ui :as ui]
             [clojure.pprint :refer [pprint]]
             [clojure.edn :as edn]
@@ -308,7 +308,7 @@
        (Thread/onSpinWait)))))
 
 
-(defn play-game* [full-path opts]
+(defn play-game* [iretro full-path opts]
   (let [{:keys [run-with-close-handler render-frame ->repaint!]} opts
         running? (atom true)
         refs (atom #{})
@@ -316,31 +316,31 @@
                (swap! refs conj o)
                o)
 
-        _ (retro/retro_set_environment set-environment)
-        _ (retro/retro_init)
+        _ (retro/retro_set_environment iretro set-environment)
+        _ (retro/retro_init iretro)
 
         video-pixmap* (atom nil)
-        _ (retro/retro_set_video_refresh
+        _ (retro/retro_set_video_refresh iretro
            (ref! (video-refresh-callback render-frame video-pixmap*)))
-        _ (retro/retro_set_audio_sample audio-sample)
+        _ (retro/retro_set_audio_sample iretro audio-sample)
 
 
         audioq (LinkedBlockingQueue. 1)
         controls* (atom {})
-        _ (retro/retro_set_input_poll input-poll)
-        _ (retro/retro_set_input_state
+        _ (retro/retro_set_input_poll iretro input-poll)
+        _ (retro/retro_set_input_state iretro 
            (ref! (input-state-callback controls*)))
 
         
 
-        _ (retro/retro_set_audio_sample_batch
+        _ (retro/retro_set_audio_sample_batch iretro 
            (ref! (audio-sample-batch-callback audioq)))
 
-        _ (retro/retro_load_game
+        _ (retro/retro_load_game iretro
            (ref!
             (game-info full-path)))
 
-        av-info (retro/get-av-info)
+        av-info (retro/get-av-info iretro)
         fps (-> av-info
                 :timing
                 :fps)
@@ -374,7 +374,7 @@
     (loop []
       (when @running?
         (let [start (System/nanoTime)]
-          (retro/retro_run)
+          (retro/retro_run iretro)
           
           (repaint!)
           
@@ -382,22 +382,17 @@
                     (- (System/nanoTime)
                        start))))
         (recur)))
-    (retro/retro_deinit)
+    (retro/retro_deinit iretro)
 
     ;; hang on to refs till the end
     (reset! refs nil)
     nil))
 
-(defn play-game [full-path opts]
+(defn play-game [iretro full-path opts]
   (let [thread
-        (Thread. #(play-game* full-path opts))]
+        (Thread. #(play-game* iretro full-path opts))]
     (.setPriority thread Thread/MAX_PRIORITY)
     (.start thread)
     (.join thread)))
-
-(comment
-  (play-game "Super Mario Bros. 2.nes")
-  (play-game "Super Mario World.smc")
-  ,)
 
 

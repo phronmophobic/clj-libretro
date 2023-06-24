@@ -46,16 +46,26 @@
 (defn ^:private ->repaint! [winfo]
   (::java2d/repaint winfo))
 
-(defn play-game [full-path]
+(defn play-game [iretro full-path]
   (retro-ui/play-game
+   iretro
    full-path
    {:run-with-close-handler run-with-close-handler
     :render-frame render-frame
     :->repaint! ->repaint!}))
 
 (comment
-  (play-game "Super Mario Bros. 2.nes")
-  (play-game "Super Mario World.smc")
+  (play-game
+   @(requiring-resolve 'com.phronemophobic.clj-libretro.nes/iretro)
+   "Super Mario Bros. 2.nes")
+
+  (play-game
+   @(requiring-resolve 'com.phronemophobic.clj-libretro.nes/iretro)
+   "testroms/tsone/neskit/2048.nes")
+
+  (play-game
+   @(requiring-resolve 'com.phronemophobic.clj-libretro.snes/iretro)
+   "Super Mario World.smc")
   ,)
 
 
