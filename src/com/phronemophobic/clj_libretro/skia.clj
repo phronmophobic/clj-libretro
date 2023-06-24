@@ -1,6 +1,7 @@
 (ns com.phronemophobic.clj-libretro.skia
   (:require [membrane.skia :as skia]
             [membrane.ui :as ui]
+            [clojure.string :as str]
             [com.phronemophobic.clj-libretro.ui :as retro-ui]))
 
 (def ^:private pixmap @#'skia/pixmap)
@@ -41,6 +42,13 @@
    {:run-with-close-handler run-with-close-handler
     :render-frame render-frame
     :->repaint! ->repaint!}))
+
+(defn -main [game-path]
+  (let [iretro (if (str/ends-with? game-path ".nes")
+                 @(requiring-resolve 'com.phronemophobic.clj-libretro.nes/iretro)
+                 @(requiring-resolve 'com.phronemophobic.clj-libretro.snes/iretro))]
+    (play-game iretro game-path)
+    (System/exit 0)))
 
 (comment
   (play-game

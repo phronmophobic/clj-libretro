@@ -354,6 +354,7 @@
                               (let [play-audio (play-sound sample-rate)]
                                 (while @running?
                                   (play-audio 0 (.take audioq))))))
+                       (.setDaemon true)
                        (.start))
 
         wwidth (-> av-info

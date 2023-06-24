@@ -1,6 +1,7 @@
 (ns com.phronemophobic.clj-libretro.java2d
   (:require [membrane.java2d :as java2d]
             [membrane.ui :as ui]
+            [clojure.string :as str]
             [com.phronemophobic.clj-libretro.ui :as retro-ui])
   (:import java.awt.image.BufferedImage
            java.awt.event.WindowEvent))
@@ -53,6 +54,13 @@
    {:run-with-close-handler run-with-close-handler
     :render-frame render-frame
     :->repaint! ->repaint!}))
+
+(defn -main [game-path]
+  (let [iretro (if (str/ends-with? game-path ".nes")
+                 @(requiring-resolve 'com.phronemophobic.clj-libretro.nes/iretro)
+                 @(requiring-resolve 'com.phronemophobic.clj-libretro.snes/iretro))]
+    (play-game iretro game-path)
+    (System/exit 0)))
 
 (comment
   (play-game
