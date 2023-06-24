@@ -1,8 +1,8 @@
 {:paths ["src" "resources"]
  :deps {org.clojure/clojure {:mvn/version "1.12.0-alpha3"}
         io.github.phronmophobic/clong {;;:git/tag "v0.9.3",
-                                       :git/sha "a27a6ce5f086d0644d2054e59649d722fcb73603"
-                                       ;;:local/root "../clong"
+                                       :git/sha "945d9a71c6436938b3bdf11de2e7bf1f1c4c978c"
+                                       ;; :local/root "../clong"
                                        }
         com.phronemophobic/membrane {:mvn/version "0.13.0-beta"
                                      ;; :local/root "../membrane2"

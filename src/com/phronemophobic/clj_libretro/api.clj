@@ -173,3 +173,125 @@ except in extreme cases.")
                   :max-height (.readField geometry "max_height")
                   :aspect-ratio (.readField geometry "aspect_ratio")}})))
 
+(defn ^:private load-core* [core-name]
+  (let [lib (com.sun.jna.NativeLibrary/getInstance (str "retro_" core-name))
+
+        functions-by-name (into {}
+                                (map (juxt :symbol identity))
+                                (:functions api))
+        name->fn (fn [fn-name]
+                   (let [f (get functions-by-name fn-name)
+                         fn-ast (gen/fn-ast struct-prefix f)
+                         fn-code (:->fn fn-ast)
+                         ->fn (eval fn-code)]
+                     (->fn lib)))
+
+        -retro_api_version                (name->fn "retro_api_version")
+        -retro_cheat_reset                (name->fn "retro_cheat_reset")
+        -retro_cheat_set                  (name->fn "retro_cheat_set")
+        -retro_deinit                     (name->fn "retro_deinit")
+        -retro_get_memory_data            (name->fn "retro_get_memory_data")
+        -retro_get_memory_size            (name->fn "retro_get_memory_size")
+        -retro_get_region                 (name->fn "retro_get_region")
+        -retro_get_system_av_info         (name->fn "retro_get_system_av_info")
+        -retro_get_system_info            (name->fn "retro_get_system_info")
+        -retro_init                       (name->fn "retro_init")
+        -retro_load_game                  (name->fn "retro_load_game")
+        -retro_load_game_special          (name->fn "retro_load_game_special")
+        -retro_reset                      (name->fn "retro_reset")
+        -retro_run                        (name->fn "retro_run")
+        -retro_serialize                  (name->fn "retro_serialize")
+        -retro_serialize_size             (name->fn "retro_serialize_size")
+        -retro_set_audio_sample           (name->fn "retro_set_audio_sample")
+        -retro_set_audio_sample_batch     (name->fn "retro_set_audio_sample_batch")
+        -retro_set_controller_port_device (name->fn "retro_set_controller_port_device")
+        -retro_set_environment            (name->fn "retro_set_environment")
+        -retro_set_input_poll             (name->fn "retro_set_input_poll")
+        -retro_set_input_state            (name->fn "retro_set_input_state")
+        -retro_set_video_refresh          (name->fn "retro_set_video_refresh")
+        -retro_unload_game                (name->fn "retro_unload_game")
+        -retro_unserialize                (name->fn "retro_unserialize")]
+    (reify IRetro
+      (retro_set_environment [_ env-callback]
+        (-retro_set_environment env-callback))
+
+      (retro_set_video_refresh [_ video-refresh-callback]
+        (-retro_set_video_refresh video-refresh-callback))
+
+      (retro_set_audio_sample [_ audio-sample-callback]
+        (-retro_set_audio_sample audio-sample-callback))
+
+      (retro_set_audio_sample_batch [_ audo-sample-batch-callback]
+        (-retro_set_audio_sample_batch audo-sample-batch-callback))
+
+      (retro_set_input_poll [_ poll-input-callback]
+        (-retro_set_input_poll poll-input-callback))
+
+      (retro_set_input_state [_ input-state-callback]
+        (-retro_set_input_state input-state-callback))
+
+      (retro_init [_]
+        (-retro_init))
+
+      (retro_deinit [_]
+        (-retro_deinit))
+      (retro_api_version [_]
+        (-retro_api_version))
+
+      (retro_get_system_info [_ info]
+        (-retro_get_system_info info))
+
+      (retro_get_system_av_info [_ info]
+        (-retro_get_system_av_info info))
+
+      (retro_set_controller_port_device [_ port device]
+        (-retro_set_controller_port_device port device))
+
+      (retro_reset [_]
+        (-retro_reset))
+
+      (retro_run [_]
+        (-retro_run))
+
+      (retro_serialize_size [_]
+        (-retro_serialize_size))
+
+      (retro_serialize [_ data size]
+        (-retro_serialize data size))
+
+      (retro_unserialize [_ data size]
+        (-retro_unserialize data size))
+
+      (retro_cheat_reset [_]
+        (-retro_cheat_reset))
+
+      (retro_cheat_set [_ index enabled code]
+        (-retro_cheat_set index enabled code))
+
+      (retro_load_game [_ game]
+        (-retro_load_game game))
+
+      (retro_load_game_special [_ game_type info num_info]
+        (-retro_load_game_special game_type info num_info))
+
+      (retro_unload_game [_]
+        (-retro_unload_game))
+
+      (retro_get_region [_]
+        (-retro_get_region))
+
+      (retro_get_memory_data [_ id]
+        (-retro_get_memory_data id))
+
+      (retro_get_memory_size [_ id]
+        (-retro_get_memory_size id)))))
+
+(let [load-core-memo (memoize load-core*)]
+  (defn load-core
+    "Loads a core that satisfies IRetro.
+
+  examples:
+  (load-core \"fceumm\")
+  (load-core \"snes9x\")"
+    [core-name]
+    (load-core-memo core-name)))
