@@ -1,10 +1,7 @@
 {:paths ["src" "resources"]
  :deps {org.clojure/clojure {:mvn/version "1.12.0-alpha3"}
-        io.github.phronmophobic/clong {;;:git/tag "v0.9.3",
-                                       :git/sha "945d9a71c6436938b3bdf11de2e7bf1f1c4c978c"
-                                       ;; :local/root "../clong"
-                                       }
-        com.phronemophobic/membrane {:mvn/version "0.13.0-beta"
+        com.phronemophobic/clong {:mvn/version "1.0"}
+        com.phronemophobic/membrane { :mvn/version "0.13.1-beta"
                                      ;; :local/root "../membrane2"
                                      }
 
@@ -29,6 +26,7 @@
               ]
 
    :extra-deps {com.phronemophobic/clj-media {:local/root "../clj-media"}
+                org.bytedeco/llvm-platform {:mvn/version "16.0.4-1.5.9"}
                 com.phronemophobic.membrane/skialib-macosx-aarch64 {:mvn/version "0.13-beta"
                                                                     ;; :local/root "/Users/adrian/workspace/membrane2/csource/macos-aarch64"
                                                                     }}
