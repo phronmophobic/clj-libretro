@@ -2,7 +2,9 @@
   (:require [clojure.edn :as edn]
             [clojure.string :as str]
             [clojure.java.io :as io]
-            [com.phronemophobic.clong.gen.jna :as gen]))
+            [com.phronemophobic.clong.gen.jna :as gen])
+  (:import com.sun.jna.Memory
+           com.sun.jna.ptr.ByteByReference))
 
 
 (defn ^:private write-edn [w obj]
@@ -160,6 +162,16 @@ except in extreme cases.")
   (defmacro import-structs! []
     `(gen/import-structs! api ~struct-prefix)))
 
+(defn ^:private write-string [struct field s]
+  (let [bytes (.getBytes s "utf-8")
+        mem (doto (Memory. (inc (alength bytes)))
+              (.write 0 bytes 0 (alength bytes))
+              (.setByte (alength bytes) 0))
+        bbr (doto (ByteByReference.)
+              (.setPointer mem))]
+    (doto struct
+      (.writeField field bbr))))
+
 (defn get-av-info [iretro]
   (let [s (retro_system_av_infoByReference.)]
     (retro_get_system_av_info iretro s)
@@ -172,6 +184,14 @@ except in extreme cases.")
                   :max-width (.readField geometry "max_width")
                   :max-height (.readField geometry "max_height")
                   :aspect-ratio (.readField geometry "aspect_ratio")}})))
+
+(defn game-info [path]
+  (let [game (retro_game_infoByReference.)]
+    (doto game
+      (write-string "path" path)
+      (.writeField "data" nil)
+      (.writeField "size" 0)
+      (.writeField "meta" nil))))
 
 (defn ^:private load-core* [core-name]
   (let [lib (com.sun.jna.NativeLibrary/getInstance (str "retro_" core-name))
