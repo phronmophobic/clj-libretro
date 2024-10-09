@@ -2,7 +2,11 @@
   (:require [membrane.skia :as skia]
             [membrane.ui :as ui]
             [clojure.string :as str]
-            [com.phronemophobic.clj-libretro.ui :as retro-ui]))
+            [com.phronemophobic.clj-libretro.ui :as retro-ui]
+            [com.phronemophobic.clj-libretro.api :as retro]
+            [clojure.java.io :as io])
+  (:import com.sun.jna.Memory
+           java.io.ByteArrayOutputStream))
 
 (def ^:private pixmap @#'skia/pixmap)
 
@@ -13,6 +17,66 @@
                  (fn [window window-handle]
                    (close-handler))}}
      opts)))
+
+
+(defn ^:private save-game
+  "Serialize the current global game state to the file path `fname`."
+  [iretro fname]
+  (let [size (retro/retro_serialize_size iretro)
+        mem (Memory. size)]
+    (retro/retro_serialize iretro mem size)
+    (let [buf (byte-array size)]
+      (.read mem 0 buf 0 size)
+      (with-open [os (io/output-stream fname)]
+        (io/copy buf
+                 os)))
+    ))
+
+(defn ^:private load-save
+  "Read the serialized game state from the file path `fname` and overwrite the current global game state."
+  [iretro fname]
+  (let [baos (ByteArrayOutputStream.)]
+    (with-open [is (io/input-stream fname)]
+      (io/copy is baos))
+    (let [buf (.toByteArray baos)]
+      (retro/retro_unserialize iretro buf (alength buf)))))
+
+(def RETRO_MEMORY_SYSTEM_RAM  2)
+(def ram-size 0x800)
+(defn ^:private get-memory
+  "Return the current console RAM.
+
+  Note: this is different than the game state."
+  [iretro]
+  (let [mem (retro/retro_get_memory_data iretro RETRO_MEMORY_SYSTEM_RAM)
+        buf (byte-array ram-size)]
+    (.read mem 0 buf 0 ram-size)
+    buf))
+
+(defn hud [iretro pm]
+  (let [mem (get-memory iretro)]
+    (ui/vertical-layout
+     (ui/horizontal-layout
+      (ui/button "save"
+                 (fn []
+                   (save-game iretro "ui.save")
+                   nil))
+      (ui/button "load"
+                 (fn []
+                   (load-save iretro "ui.save")
+                   nil)))
+     (ui/label
+      (clojure.string/join
+       (map str
+            (reverse
+             [(nth mem 96)
+              (nth mem 97)
+              (nth mem 98)
+              (nth mem 99)
+              (nth mem 100)
+              (nth mem 101)
+              ]))))
+     pm)))
 
 (defn ^:private render-frame [pm data width height pitch]
   (let [len (* 2
@@ -41,6 +105,7 @@
    full-path
    {:run-with-close-handler run-with-close-handler
     :render-frame render-frame
+    :hud #(hud iretro %)
     :->repaint! ->repaint!}))
 
 (defn -main [game-path]

@@ -231,19 +231,20 @@
            (java.util.Date.)))
 
 
-(defn main-view [video-pixmap* controls*]
+(defn main-view [hud video-pixmap* controls*]
   (when-let [pm @video-pixmap*]
-    (ui/on-key-event
-     (fn [key scancode action mods]
+    (hud
+     (ui/on-key-event
+      (fn [key scancode action mods]
 
-       (if-let [k (get keymap key)]
-         (swap! controls* assoc k
-                (or (= :press action)
-                    (= :repeat action))))
-       nil)
-     (ui/scale 3 3 pm)
-     #_(ui/image img
-                 [800 nil]))))
+        (if-let [k (get keymap key)]
+          (swap! controls* assoc k
+                 (or (= :press action)
+                     (= :repeat action))))
+        nil)
+      (ui/scale 3 3 pm)
+      #_(ui/image img
+                  [800 nil])))))
 
 (def gamepad-axes
   {:GLFW_GAMEPAD_AXIS_LEFT_X   0
@@ -354,7 +355,6 @@
                               (let [play-audio (play-sound sample-rate)]
                                 (while @running?
                                   (play-audio 0 (.take audioq))))))
-                       (.setDaemon true)
                        (.start))
 
         wwidth (-> av-info
@@ -365,8 +365,9 @@
                    :geometry
                    :base-height
                    (* 3))
+        hud (or (:hud opts) identity)
         winfo (run-with-close-handler
-               #(main-view video-pixmap* controls*)
+               #(main-view hud video-pixmap* controls*)
                {:window-title "clj-libretro"
                 :window-start-width wwidth
                 :window-start-height wheight}
