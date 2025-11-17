@@ -4,7 +4,9 @@
             [clojure.java.io :as io]
             [com.phronemophobic.clong.gen.jna :as gen])
   (:import com.sun.jna.Memory
-           com.sun.jna.ptr.ByteByReference))
+           com.sun.jna.ptr.ByteByReference
+           com.sun.jna.Structure))
+
 
 
 (defn ^:private write-edn [w obj]
@@ -162,7 +164,7 @@ except in extreme cases.")
   (defmacro import-structs! []
     `(gen/import-structs! api ~struct-prefix)))
 
-(defn ^:private write-string [struct field s]
+(defn ^:private write-string [^Structure struct field ^String s]
   (let [bytes (.getBytes s "utf-8")
         mem (doto (Memory. (inc (alength bytes)))
               (.write 0 bytes 0 (alength bytes))
@@ -172,10 +174,14 @@ except in extreme cases.")
     (doto struct
       (.writeField field bbr))))
 
+
+
 (defn get-av-info [iretro]
   (let [s (retro_system_av_infoByReference.)]
     (retro_get_system_av_info iretro s)
-    (let [timing (.readField s "timing")
+    (let [^Structure
+          timing (.readField s "timing")
+          ^Structure
           geometry (.readField s "geometry")]
       {:timing {:fps (.readField timing "fps")
                 :sample-rate (.readField timing "sample_rate")}
