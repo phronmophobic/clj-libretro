@@ -78,7 +78,14 @@
               ]))))
      pm)))
 
-(defn ^:private render-frame [pm data width height pitch]
+(defn render-frame
+  "Given `data` as a pointer with `width`, `height`, and `pitch`.
+   Construct a skia/pixmap that can be drawn.
+
+  If `pm` is nil, creates a new backing byte buffer for the pixmap.
+  If `pm` is not nil, it should be a skia/pixmap. The id will be incremented
+  and the backing buffer will be mutated in place!"
+  [pm data width height pitch]
   (let [len (* 2
                height
                pitch)
