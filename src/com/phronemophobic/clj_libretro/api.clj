@@ -199,10 +199,9 @@ except in extreme cases.")
       (.writeField "size" 0)
       (.writeField "meta" nil))))
 
-(defn ^:private load-core* [core-name]
-  (let [lib (com.sun.jna.NativeLibrary/getInstance (str "retro_" core-name))
 
-        functions-by-name (into {}
+(defn ^:private load-core-lib* [lib]
+  (let [functions-by-name (into {}
                                 (map (juxt :symbol identity))
                                 (:functions api))
         name->fn (fn [fn-name]
@@ -312,7 +311,10 @@ except in extreme cases.")
       (retro_get_memory_size [_ id]
         (-retro_get_memory_size id)))))
 
-(let [load-core-memo (memoize load-core*)]
+(defn ^:private load-core [core-name]
+  (load-core-lib* (com.sun.jna.NativeLibrary/getInstance (str "retro_" core-name))))
+
+(let [load-core-memo (memoize load-core)]
   (defn load-core
     "Loads a core that satisfies IRetro.
 
@@ -321,3 +323,11 @@ except in extreme cases.")
   (load-core \"snes9x\")"
     [core-name]
     (load-core-memo core-name)))
+
+(let [load-core-lib-memo (memoize load-core-lib*)]
+  (defn load-core-lib
+    "Loads a lib that satisfies IRetro.
+    
+    You should probably be using load-core."
+    [lib]
+    (load-core-lib-memo lib)))
