@@ -39,7 +39,7 @@
 
 (retro/import-structs!)
 
-(defn write-string [struct field s]
+(defn write-string [^Structure struct field ^String s]
   (let [bytes (.getBytes s "utf-8")
         mem (doto (Memory. (inc (alength bytes)))
                    (.write 0 bytes 0 (alength bytes))
@@ -49,13 +49,13 @@
     (doto struct
       (.writeField field bbr))))
 
-(defn get-string [struct field]
-  (when-let [f (.readField struct field)]
+(defn get-string [^Structure struct field]
+  (when-let [f ^ByteByReference (.readField struct field)]
     (-> f
-        .getPointer
+        (.getPointer)
         (.getString 0))))
 
-(defn set-environment [cmd data]
+(defn set-environment [cmd ^Pointer data]
   (case (c/name cmd)
     :RETRO_ENVIRONMENT_SET_CONTENT_INFO_OVERRIDE 1
 
@@ -162,7 +162,7 @@
        (.drain source-data-line)
        (.close source-data-line)
        read-bytes)
-      ([read-bytes buf]
+      ([read-bytes ^bytes buf]
        ;; (.drain  ^SourceDataLine source-data-line)
        (let [result
              (+ read-bytes
@@ -181,7 +181,7 @@
 (def batch (atom nil))
 
 (defn audio-sample-batch-callback [audioq]
-  (fn [data num_frames]
+  (fn [^ByteByReference data num_frames]
     (.put ^LinkedBlockingQueue audioq
           (.getByteArray (.getPointer data)
                          0 (* 2 ;; channels
